@@ -48,6 +48,7 @@ static const char *SQL_STMT[] = {
     [FIMDB_STMT_GET_COUNT_PATH] = "SELECT count(*) FROM entry_path",
     [FIMDB_STMT_GET_COUNT_DATA] = "SELECT count(*) FROM entry_data",
     [FIMDB_STMT_GET_INODE] = "SELECT inode FROM entry_data where rowid=(SELECT inode_id FROM entry_path WHERE path = ?)",
+    [FIMDB_STMT_GET_PATH_FROM_PATTERN] = "SELECT path, inode_id, mode, last_event, entry_type, scanned, options, checksum, dev, inode, size, perm, attributes, uid, gid, user_name, group_name, hash_md5, hash_sha1, hash_sha256, mtime FROM entry_path INNER JOIN entry_data ON entry_data.rowid = entry_path.inode_id where path LIKE ?",
 };
 
 
@@ -226,6 +227,13 @@ void fim_db_bind_get_inode_id(fdb_t *fim_sql, const char *file_path);
  */
 void fim_db_bind_get_path_inode(fdb_t *fim_sql, const char *file_path);
 
+/**
+ * @brief Binds data into a select path like statement.
+ *
+ * @param fim_sql FIM database structure.
+ * @param pattern Pattern that will be used for the LIKE operator.
+ */
+void fim_db_bind_get_path_from_pattern(fdb_t *fim_sql, const char *pattern);
 
 fdb_t *fim_db_init(int storage) {
     fdb_t *fim;
@@ -486,6 +494,23 @@ int fim_db_clean_stmt(fdb_t *fim_sql, int index) {
 
 
 //wrappers
+
+int fim_db_get_path_from_pattern(fdb_t *fim_sql, const char *pattern, fim_tmp_file **file, int storage) {
+    if ((*file = fim_db_create_temp_file(storage)) == NULL) {
+        return FIMDB_ERR;
+    }
+
+    fim_db_clean_stmt(fim_sql, FIMDB_STMT_GET_PATH_FROM_PATTERN);
+    fim_db_bind_get_path_from_pattern(fim_sql, pattern);
+
+    int ret = fim_db_process_get_query(fim_sql, FIMDB_STMT_GET_PATH_FROM_PATTERN, fim_db_callback_save_path, storage, (void*) *file);
+
+    if (*file && (*file)->elements == 0) {
+        fim_db_clean_file(file, storage);
+    }
+
+    return ret;
+}
 
 int fim_db_get_path_range(fdb_t *fim_sql, char *start, char *top, fim_tmp_file **file, int storage) {
     if ((*file = fim_db_create_temp_file(storage)) == NULL) {
@@ -772,6 +797,11 @@ void fim_db_bind_get_inode_id(fdb_t *fim_sql, const char *file_path) {
 /* FIMDB_STMT_GET_INODE */
 void fim_db_bind_get_path_inode(fdb_t *fim_sql, const char *file_path) {
     sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_GET_INODE], 1, file_path, -1, NULL);
+}
+
+/* FIMDB_STMT_GET_PATH_FROM_PATTERN */
+void fim_db_bind_get_path_from_pattern(fdb_t *fim_sql, const char *pattern) {
+    sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_GET_PATH_FROM_PATTERN], 1, pattern, -1, NULL);
 }
 
 void fim_db_bind_range(fdb_t *fim_sql, int index, const char *start, const char *top) {

@@ -320,6 +320,17 @@ int fim_db_get_path_range(fdb_t *fim_sql, char *start, char *top,
                          fim_tmp_file **file, int storage) ;
 
 /**
+ * @brief Get path list using the sqlite LIKE operator using @pattern. (stored in @file).
+ * @param fim_sql FIM database struct.
+ * @param pattern Pattern that will be used for the LIKE operation.
+ * @param file Structure of the storage which contains all the paths.
+ * @param storage 1 Store database in memory, disk otherwise.
+ * @return FIMDB_OK on success, FIMDB_ERR otherwise.
+ */
+int fim_db_get_path_from_pattern(fdb_t *fim_sql, const char *pattern, fim_tmp_file **file, int storage);
+
+
+/**
  * @brief Removes a range of paths from the database.
  * The paths are alphabetically ordered.
  * The range is given by start and top parameters.
