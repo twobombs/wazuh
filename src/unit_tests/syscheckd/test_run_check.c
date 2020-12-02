@@ -655,12 +655,7 @@ void test_fim_link_update(void **state) {
     int pos = 1;
     char *new_path = "/new_path";
 
-    expect_value(__wrap_fim_db_get_path_range, fim_sql, syscheck.database);
-    expect_string(__wrap_fim_db_get_path_range, start, "/folder/");
-    expect_string(__wrap_fim_db_get_path_range, top, "/folder0");
-    expect_value(__wrap_fim_db_get_path_range, storage, FIM_DB_DISK);
-    will_return(__wrap_fim_db_get_path_range, NULL);
-    will_return(__wrap_fim_db_get_path_range, FIMDB_OK);
+    expect_fim_db_get_path_from_pattern(syscheck.database, "/link/%", NULL, FIM_DB_DISK, FIMDB_OK);
 
     expect_string(__wrap_realtime_adddir, dir, new_path);
     expect_value(__wrap_realtime_adddir, whodata, 0);
@@ -683,12 +678,7 @@ void test_fim_link_update_already_added(void **state) {
     char *link_path = "/link";
     char error_msg[OS_SIZE_128];
 
-    expect_value(__wrap_fim_db_get_path_range, fim_sql, syscheck.database);
-    expect_string(__wrap_fim_db_get_path_range, start, "/folder/");
-    expect_string(__wrap_fim_db_get_path_range, top, "/folder0");
-    expect_value(__wrap_fim_db_get_path_range, storage, FIM_DB_DISK);
-    will_return(__wrap_fim_db_get_path_range, NULL);
-    will_return(__wrap_fim_db_get_path_range, FIMDB_OK);
+    expect_fim_db_get_path_from_pattern(syscheck.database, "/link/%", NULL, FIM_DB_DISK, FIMDB_OK);
 
     snprintf(error_msg, OS_SIZE_128, FIM_LINK_ALREADY_ADDED, link_path);
 
@@ -711,12 +701,7 @@ void test_fim_link_check_delete(void **state) {
     will_return(__wrap_lstat, 0);
     will_return(__wrap_lstat, 0);
 
-    expect_value(__wrap_fim_db_get_path_range, fim_sql, syscheck.database);
-    expect_string(__wrap_fim_db_get_path_range, start, "/folder/");
-    expect_string(__wrap_fim_db_get_path_range, top, "/folder0");
-    expect_value(__wrap_fim_db_get_path_range, storage, FIM_DB_DISK);
-    will_return(__wrap_fim_db_get_path_range, NULL);
-    will_return(__wrap_fim_db_get_path_range, FIMDB_OK);
+    expect_fim_db_get_path_from_pattern(syscheck.database, "/link/%", NULL, FIM_DB_DISK, FIMDB_OK);
 
     expect_string(__wrap_fim_configuration_directory, path, pointed_folder);
     expect_string(__wrap_fim_configuration_directory, entry, "file");
@@ -797,12 +782,8 @@ void test_fim_link_delete_range(void **state) {
     int pos = 1;
     fim_tmp_file *tmp_file = *state;
 
-    expect_value(__wrap_fim_db_get_path_range, fim_sql, syscheck.database);
-    expect_string(__wrap_fim_db_get_path_range, start, "/folder/");
-    expect_string(__wrap_fim_db_get_path_range, top, "/folder0");
-    expect_value(__wrap_fim_db_get_path_range, storage, FIM_DB_DISK);
-    will_return(__wrap_fim_db_get_path_range, tmp_file);
-    will_return(__wrap_fim_db_get_path_range, FIMDB_OK);
+    expect_fim_db_get_path_from_pattern(syscheck.database, "/link/%", tmp_file, FIM_DB_DISK, FIMDB_OK);
+
 
     expect_value(__wrap_fim_db_delete_range, fim_sql, syscheck.database);
     expect_value(__wrap_fim_db_delete_range, storage, FIM_DB_DISK);
@@ -817,14 +798,8 @@ void test_fim_link_delete_range_error(void **state) {
     char error_msg[OS_SIZE_128];
     fim_tmp_file *tmp_file = *state;
 
-    snprintf(error_msg, OS_SIZE_128, FIM_DB_ERROR_RM_RANGE, "/folder/", "/folder0");
-
-    expect_value(__wrap_fim_db_get_path_range, fim_sql, syscheck.database);
-    expect_string(__wrap_fim_db_get_path_range, start, "/folder/");
-    expect_string(__wrap_fim_db_get_path_range, top, "/folder0");
-    expect_value(__wrap_fim_db_get_path_range, storage, FIM_DB_DISK);
-    will_return(__wrap_fim_db_get_path_range, tmp_file);
-    will_return(__wrap_fim_db_get_path_range, FIMDB_ERR);
+    expect_fim_db_get_path_from_pattern(syscheck.database, "/link/%", tmp_file, FIM_DB_DISK, FIMDB_OK);
+    snprintf(error_msg, OS_SIZE_128, FIM_DB_ERROR_RM_PATTERN, "/link/%");
 
     expect_string(__wrap__merror, formatted_msg, error_msg);
 
@@ -832,8 +807,6 @@ void test_fim_link_delete_range_error(void **state) {
     expect_value(__wrap_fim_db_delete_range, storage, FIM_DB_DISK);
     expect_memory(__wrap_fim_db_delete_range, file, tmp_file, sizeof(tmp_file));
     will_return(__wrap_fim_db_delete_range, FIMDB_ERR);
-
-    expect_string(__wrap__merror, formatted_msg, error_msg);
 
     fim_link_delete_range(pos);
 }
