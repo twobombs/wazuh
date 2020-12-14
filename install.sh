@@ -865,7 +865,18 @@ main()
         read ANY
     fi
 
-    . ./src/init/update.sh
+	# Updating systemd's env variables if there has been a previous version installed 
+
+	if [ -f /etc/ossec-init.conf ];then
+		. /etc/ossec-init.conf
+		. ./src/init/update.sh
+		if [ "$(printf '%s\n' "v4.2.0" "$VERSION" | sort -V | head -n1)" != "v4.2.0" ];then
+			updateSystemd
+		else
+			exit 0
+		fi
+	fi
+
     # Is this an update?
     if [ "`isUpdate`" = "${TRUE}" -a "x${USER_CLEANINSTALL}" = "x" ]; then
         echo ""
@@ -1003,16 +1014,16 @@ main()
     # Installing (calls the respective script
     # -- InstallAgent.sh or InstallServer.sh
     Install
-
+	
     # User messages
     echo ""
     echo " - ${configurationdone}."
     echo ""
     echo " - ${tostart}:"
-    echo "      $INSTALLDIR/bin/wazuh-control start"
+    echo "      $INSTALLDIR/bin/ossec-control start"
     echo ""
     echo " - ${tostop}:"
-    echo "      $INSTALLDIR/bin/wazuh-control stop"
+    echo "      $INSTALLDIR/bin/ossec-control stop"
     echo ""
     echo " - ${configat} $INSTALLDIR/etc/ossec.conf"
     echo ""
@@ -1073,7 +1084,7 @@ main()
 
     if [ "X$notmodified" = "Xyes" ]; then
         catMsg "0x105-noboot"
-        echo "      $INSTALLDIR/bin/wazuh-control start"
+        echo "      $INSTALLDIR/bin/ossec-control start"
         echo ""
     fi
 }
