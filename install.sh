@@ -865,11 +865,11 @@ main()
         read ANY
     fi
 
-	# Updating systemd's env variables if there has been a previous version installed 
+	# Updating Wazuh's service in case there has been a previous version installed  
 
-	if [ -f /etc/ossec-init.conf ];then
+	. ./src/init/update.sh
+	if [ -f /etc/ossec-init.conf ]; then
 		. /etc/ossec-init.conf
-		. ./src/init/update.sh
 		if [ "$(printf '%s\n' "v4.2.0" "$VERSION" | sort -V | head -n1)" != "v4.2.0" ];then
 			updateSystemd
 		else
@@ -1014,7 +1014,7 @@ main()
     # Installing (calls the respective script
     # -- InstallAgent.sh or InstallServer.sh
     Install
-	
+
     # User messages
     echo ""
     echo " - ${configurationdone}."
